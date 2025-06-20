@@ -1,0 +1,57 @@
+{
+    "name": "3dgoo/laravel-http-timeout-retry-provider",
+    "description": "Http timeout retry provider for Laravel",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Michael Nowina-Krowicki",
+            "email": "michael@3dgoo.com"
+        }
+    ],
+    "keywords": [
+        "laravel",
+        "http",
+        "timeout",
+        "retry"
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/http": "^10.0 || ^11.0 || ^12.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.22",
+        "nunomaduro/collision": "^7.10",
+        "orchestra/testbench": "^8.15",
+        "overtrue/phplint": "^9.0",
+        "pestphp/pest": "^2.24",
+        "pestphp/pest-plugin-laravel": "^2.2"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "X3dgoo\\HttpTimeoutRetryProvider\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "X3dgoo\\HttpTimeoutRetryProvider\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "X3dgoo\\HttpTimeoutRetryProvider\\Providers\\HttpTimeoutRetryProvider"
+            ]
+        }
+    }
+}
