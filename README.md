@@ -39,9 +39,19 @@ HTTP_RETRY_ENABLED=true
 Use the withTimeoutRetry() macro on any HTTP client request:
 
 ```php
-use Illuminate\Support\Facades\Http;
+Http::withTimeoutRetry()->get('https://example.com/api');
+```
 
-$response = Http::withTimeoutRetry()->get('https://example.com/api');
+We can also pass optional parameters to override the default number of retry attempts, the default retry delay and a callback function to override the retry logic.
+
+```php
+Http::withTimeoutRetry(
+    5,
+    250,
+    function ($exception) {
+        return $exception instanceof \RuntimeException;
+    }
+)->get('https://example.com/api');
 ```
 
 This will retry the request up to the configured number of times if a connection timeout occurs.
