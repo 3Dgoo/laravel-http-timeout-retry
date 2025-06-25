@@ -37,7 +37,8 @@ class HttpTimeoutRetryProvider extends ServiceProvider
             return $this->retry(
                 $attempts,
                 $delay,
-                $callback
+                $callback,
+                false
             );
         });
     }
