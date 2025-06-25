@@ -47,6 +47,20 @@ return [
 
         /*
         |--------------------------------------------------------------------------
+        | Allowed HTTP Methods
+        |--------------------------------------------------------------------------
+        |
+        | Specify which HTTP methods are allowed to be retried. Use an array of
+        | HTTP method names (case-insensitive). Set to ['*'] to allow all methods,
+        | or an empty array to disable method-based filtering.
+        |
+        | Common methods: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
+        |
+        */
+        'allowed_methods' => array_map('strtoupper', explode(',', env('HTTP_RETRY_ALLOWED_METHODS', 'GET,HEAD,OPTIONS'))),
+
+        /*
+        |--------------------------------------------------------------------------
         | Retry Logging Configuration
         |--------------------------------------------------------------------------
         |
