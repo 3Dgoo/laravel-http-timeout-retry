@@ -147,7 +147,7 @@ it('logs retry attempts when logging is enabled', function () {
     expect($attempts)->toBe(3);
 
     Log::shouldHaveReceived('log')
-        ->with('info', \Mockery::pattern('/HTTP request retry attempt .* failed for URL .* Connection failed/'), \Mockery::type('array'))
+        ->with('info', \Mockery::pattern('/HTTP GET request retry attempt .* failed for URL .* Connection failed/'), \Mockery::type('array'))
         ->twice();
 });
 
@@ -175,7 +175,7 @@ it('logs request URL in retry attempts', function () {
     expect($attempts)->toBe(3);
 
     Log::shouldHaveReceived('log')
-        ->with('info', \Mockery::pattern('/HTTP request retry attempt .* failed for URL https:\/\/api\.example\.com\/users.*Connection failed/'), \Mockery::on(function ($context) {
+        ->with('info', \Mockery::pattern('/HTTP GET request retry attempt .* failed for URL https:\/\/api\.example\.com\/users.*Connection failed/'), \Mockery::on(function ($context) {
             return isset($context['request_url']) &&
                    $context['request_url'] === 'https://api.example.com/users' &&
                    isset($context['attempt']) &&
@@ -210,7 +210,7 @@ it('logs full URL when using direct URL calls', function () {
     expect($attempts)->toBe(3);
 
     Log::shouldHaveReceived('log')
-        ->with('info', \Mockery::pattern('/HTTP request retry attempt .* failed for URL https:\/\/example\.com\/test.*Connection failed/'), \Mockery::on(function ($context) {
+        ->with('info', \Mockery::pattern('/HTTP GET request retry attempt .* failed for URL https:\/\/example\.com\/test.*Connection failed/'), \Mockery::on(function ($context) {
             return isset($context['request_url']) &&
                    $context['request_url'] === 'https://example.com/test' &&
                    isset($context['attempt']) &&
@@ -272,7 +272,7 @@ it('uses custom log channel when specified', function () {
     expect($attempts)->toBe(2);
 
     Log::shouldHaveReceived('log')
-        ->with('info', \Mockery::pattern('/HTTP request retry attempt .* failed for URL/'), \Mockery::type('array'))
+        ->with('info', \Mockery::pattern('/HTTP GET request retry attempt .* failed for URL/'), \Mockery::type('array'))
         ->once();
 });
 
@@ -303,7 +303,7 @@ it('can override logging setting via parameter', function () {
     expect($attempts)->toBe(2);
 
     Log::shouldHaveReceived('log')
-        ->with('info', \Mockery::pattern('/HTTP request retry attempt .* failed for URL/'), \Mockery::type('array'))
+        ->with('info', \Mockery::pattern('/HTTP GET request retry attempt .* failed for URL/'), \Mockery::type('array'))
         ->once();
 });
 
@@ -335,7 +335,7 @@ it('uses custom log level when specified', function () {
     expect($attempts)->toBe(2);
 
     Log::shouldHaveReceived('log')
-        ->with('error', \Mockery::pattern('/HTTP request retry attempt .* failed for URL/'), \Mockery::type('array'))
+        ->with('error', \Mockery::pattern('/HTTP GET request retry attempt .* failed for URL/'), \Mockery::type('array'))
         ->once();
 });
 
@@ -351,7 +351,7 @@ it('logRetryAttempt method includes URL in context', function () {
     HttpTimeoutRetryProvider::logRetryAttempt($exception, 2, 3, $testUrl);
 
     Log::shouldHaveReceived('log')
-        ->with('warning', 'HTTP request retry attempt 2/3 failed for URL https://api.test.com: Network timeout', \Mockery::on(function ($context) use ($testUrl) {
+        ->with('warning', 'HTTP UNKNOWN request retry attempt 2/3 failed for URL https://api.test.com: Network timeout', \Mockery::on(function ($context) use ($testUrl) {
             return $context['attempt'] === 2 &&
                    $context['total_attempts'] === 3 &&
                    $context['exception_class'] === ConnectionException::class &&
@@ -372,7 +372,7 @@ it('logRetryAttempt method handles empty URL gracefully', function () {
     HttpTimeoutRetryProvider::logRetryAttempt($exception, 1, 2, '');
 
     Log::shouldHaveReceived('log')
-        ->with('info', 'HTTP request retry attempt 1/2 failed for URL unknown: Connection failed', \Mockery::on(function ($context) {
+        ->with('info', 'HTTP UNKNOWN request retry attempt 1/2 failed for URL unknown: Connection failed', \Mockery::on(function ($context) {
             return $context['attempt'] === 1 &&
                    $context['total_attempts'] === 2 &&
                    $context['exception_class'] === ConnectionException::class &&
@@ -400,13 +400,13 @@ it('logs full URL for various request patterns', function () {
 
     $request = Http::withOptions([]);
 
-    expect(fn () => $request->withTimeoutRetry()->post('https://test.api.com/api/v1/users', ['name' => 'John']))
+    expect(fn () => $request->withTimeoutRetry()->get('https://test.api.com/api/v1/users'))
         ->toThrow(ConnectionException::class);
 
     expect($attempts)->toBe(3);
 
     Log::shouldHaveReceived('log')
-        ->with('info', \Mockery::pattern('/HTTP request retry attempt .* failed for URL https:\/\/test\.api\.com\/api\/v1\/users.*Connection failed/'), \Mockery::on(function ($context) {
+        ->with('info', \Mockery::pattern('/HTTP GET request retry attempt .* failed for URL https:\/\/test\.api\.com\/api\/v1\/users.*Connection failed/'), \Mockery::on(function ($context) {
             return isset($context['request_url']) &&
                    $context['request_url'] === 'https://test.api.com/api/v1/users' &&
                    isset($context['attempt']) &&
@@ -441,11 +441,152 @@ it('logs URL with query parameters', function () {
     expect($attempts)->toBe(3);
 
     Log::shouldHaveReceived('log')
-        ->with('info', \Mockery::pattern('/HTTP request retry attempt .* failed for URL https:\/\/search\.api\.com\/search\?q=test&limit=10.*Connection failed/'), \Mockery::on(function ($context) {
+        ->with('info', \Mockery::pattern('/HTTP GET request retry attempt .* failed for URL https:\/\/search\.api\.com\/search\?q=test&limit=10.*Connection failed/'), \Mockery::on(function ($context) {
             return isset($context['request_url']) &&
                    $context['request_url'] === 'https://search.api.com/search?q=test&limit=10' &&
                    isset($context['attempt']) &&
                    isset($context['total_attempts']);
         }))
         ->twice();
+});
+
+// Test HTTP method filtering functionality
+it('retries GET requests when GET is in allowed methods', function () {
+    $this->app['config']->set('http.retry.enabled', true);
+    $this->app['config']->set('http.retry.allowed_methods', ['GET', 'HEAD']);
+
+    $attempts = 0;
+
+    Http::fake([
+        'https://example.com/*' => function () use (&$attempts) {
+            $attempts++;
+            throw new ConnectionException('Connection failed');
+        },
+    ]);
+
+    $request = Http::withOptions([]);
+
+    expect(fn () => $request->withTimeoutRetry()->get('https://example.com/test'))
+        ->toThrow(ConnectionException::class);
+
+    expect($attempts)->toBe(3);
+});
+
+it('does not retry POST requests when POST is not in allowed methods', function () {
+    $this->app['config']->set('http.retry.enabled', true);
+    $this->app['config']->set('http.retry.allowed_methods', ['GET', 'HEAD']);
+
+    $attempts = 0;
+
+    Http::fake([
+        'https://example.com/*' => function () use (&$attempts) {
+            $attempts++;
+            throw new ConnectionException('Connection failed');
+        },
+    ]);
+
+    $request = Http::withOptions([]);
+
+    expect(fn () => $request->withTimeoutRetry()->post('https://example.com/test'))
+        ->toThrow(ConnectionException::class);
+
+    expect($attempts)->toBe(1);
+});
+
+it('retries all methods when wildcard (*) is in allowed methods', function () {
+    $this->app['config']->set('http.retry.enabled', true);
+    $this->app['config']->set('http.retry.allowed_methods', ['*']);
+
+    $attempts = 0;
+
+    Http::fake([
+        'https://example.com/*' => function () use (&$attempts) {
+            $attempts++;
+            throw new ConnectionException('Connection failed');
+        },
+    ]);
+
+    $request = Http::withOptions([]);
+
+    expect(fn () => $request->withTimeoutRetry()->post('https://example.com/test'))
+        ->toThrow(ConnectionException::class);
+
+    expect($attempts)->toBe(3);
+});
+
+it('allows runtime override of allowed methods', function () {
+    $this->app['config']->set('http.retry.enabled', true);
+    $this->app['config']->set('http.retry.allowed_methods', ['GET']);
+
+    $attempts = 0;
+
+    Http::fake([
+        'https://example.com/*' => function () use (&$attempts) {
+            $attempts++;
+            throw new ConnectionException('Connection failed');
+        },
+    ]);
+
+    $request = Http::withOptions([]);
+
+    expect(fn () => $request->withTimeoutRetry(allowedMethods: ['POST'])->post('https://example.com/test'))
+        ->toThrow(ConnectionException::class);
+
+    expect($attempts)->toBe(3);
+});
+
+it('includes request method in log messages when logging is enabled', function () {
+    $this->app['config']->set('http.retry.enabled', true);
+    $this->app['config']->set('http.retry.logging.enabled', true);
+    $this->app['config']->set('http.retry.allowed_methods', ['POST']);
+
+    Log::spy();
+
+    $attempts = 0;
+
+    Http::fake([
+        'https://example.com/*' => function () use (&$attempts) {
+            $attempts++;
+            if ($attempts < 3) {
+                throw new ConnectionException('Connection failed');
+            }
+
+            return Http::response(['success' => true], 200);
+        },
+    ]);
+
+    $request = Http::withOptions([]);
+    $request->withTimeoutRetry()->post('https://example.com/test');
+
+    expect($attempts)->toBe(3);
+
+    Log::shouldHaveReceived('log')
+        ->with('info', \Mockery::pattern('/HTTP POST request retry attempt .* failed for URL https:\/\/example\.com\/test.*Connection failed/'), \Mockery::on(function ($context) {
+            return isset($context['request_method']) &&
+                   $context['request_method'] === 'POST' &&
+                   isset($context['request_url']) &&
+                   $context['request_url'] === 'https://example.com/test';
+        }))
+        ->twice();
+});
+
+it('handles case-insensitive method comparison', function () {
+    $this->app['config']->set('http.retry.enabled', true);
+    $this->app['config']->set('http.retry.allowed_methods', ['get', 'post']);
+
+    $attempts = 0;
+
+    Http::fake([
+        'https://example.com/*' => function () use (&$attempts) {
+            $attempts++;
+            throw new ConnectionException('Connection failed');
+        },
+    ]);
+
+    $request = Http::withOptions([]);
+
+    expect(fn () => $request->withTimeoutRetry()->get('https://example.com/test'))
+        ->toThrow(ConnectionException::class);
+
+    expect($attempts)->toBe(3);
 });
