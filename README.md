@@ -33,9 +33,9 @@ Or, set the following environment variables in your .env file:
 HTTP_RETRY_ENABLED=true
 HTTP_RETRY_ATTEMPTS=3
 HTTP_RETRY_DELAY=100
-HTTP_RETRY_LOG_ENABLED=false
-HTTP_RETRY_LOG_LEVEL=info
-HTTP_RETRY_LOG_CHANNEL=
+HTTP_RETRY_LOGGING_ENABLED=false
+HTTP_RETRY_LOGGING_LEVEL=info
+HTTP_RETRY_LOGGING_CHANNEL=
 ```
 
 ### Configuration Options
@@ -43,9 +43,9 @@ HTTP_RETRY_LOG_CHANNEL=
 - **HTTP_RETRY_ENABLED**: Master switch to enable/disable retry functionality
 - **HTTP_RETRY_ATTEMPTS**: Number of retry attempts
 - **HTTP_RETRY_DELAY**: Base delay between retries in milliseconds
-- **HTTP_RETRY_LOG_ENABLED**: Enable logging of retry attempts
-- **HTTP_RETRY_LOG_LEVEL**: Log level for retry messages
-- **HTTP_RETRY_LOG_CHANNEL**: Custom log channel (optional)
+- **HTTP_RETRY_LOGGING_ENABLED**: Enable logging of retry attempts
+- **HTTP_RETRY_LOGGING_LEVEL**: Log level for retry messages
+- **HTTP_RETRY_LOGGING_CHANNEL**: Custom log channel (optional)
 
 ## Usage
 
@@ -74,8 +74,8 @@ This will retry the request up to the configured number of times if a connection
 
 When logging is enabled, retry attempts will be logged with detailed information:
 
-- **Log Level**: Configurable via `HTTP_RETRY_LOG_LEVEL` (default: `info`)
-- **Log Channel**: Configurable via `HTTP_RETRY_LOG_CHANNEL` (uses default log channel if not set)
+- **Log Level**: Configurable via `HTTP_RETRY_LOGGING_LEVEL` (default: `info`)
+- **Log Channel**: Configurable via `HTTP_RETRY_LOGGING_CHANNEL` (uses default log channel if not set)
 - **Log Message**: Includes attempt number, total attempts, and exception details
 
 Example log entry:
@@ -100,9 +100,9 @@ return [
         'attempts' => env('HTTP_RETRY_ATTEMPTS', 3),
         'delay' => env('HTTP_RETRY_DELAY', 100),
         'logging' => [
-            'enabled' => env('HTTP_RETRY_LOG_ENABLED', false),
-            'level' => env('HTTP_RETRY_LOG_LEVEL', 'info'),
-            'channel' => env('HTTP_RETRY_LOG_CHANNEL', null),
+            'enabled' => env('HTTP_RETRY_LOGGING_ENABLED', false),
+            'level' => env('HTTP_RETRY_LOGGING_LEVEL', 'info'),
+            'channel' => env('HTTP_RETRY_LOGGING_CHANNEL', null),
         ],
     ],
 ];

@@ -62,7 +62,7 @@ return [
             | Enable or disable logging of retry attempts.
             |
             */
-            'enabled' => filter_var(env('HTTP_RETRY_LOG_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+            'enabled' => filter_var(env('HTTP_RETRY_LOGGING_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
 
             /*
             |--------------------------------------------------------------------------
@@ -73,7 +73,7 @@ return [
             | emergency, alert, critical, error, warning, notice, info, debug
             |
             */
-            'level' => in_array(env('HTTP_RETRY_LOG_LEVEL', 'info'), [
+            'level' => in_array(env('HTTP_RETRY_LOGGING_LEVEL', 'info'), [
                 'emergency',
                 'alert',
                 'critical',
@@ -82,7 +82,7 @@ return [
                 'notice',
                 'info',
                 'debug',
-            ]) ? env('HTTP_RETRY_LOG_LEVEL', 'info') : 'info',
+            ]) ? env('HTTP_RETRY_LOGGING_LEVEL', 'info') : 'info',
 
             /*
             |--------------------------------------------------------------------------
@@ -93,7 +93,7 @@ return [
             | application log channel defined in config/logging.php
             |
             */
-            'channel' => env('HTTP_RETRY_LOG_CHANNEL', null),
+            'channel' => env('HTTP_RETRY_LOGGING_CHANNEL', null),
         ],
     ],
 ];
